@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Uni Routine Maker
 
-## Getting Started
+Pick the days you can come to uni, your time window and your courses. The app
+builds up to 5 clash-free class routines, with the least free time between classes
+first, and lets you download each one as a PDF.
 
-First, run the development server:
+Everything runs in the browser: no backend, no database, no login.
+
+## Run it on your computer
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # then open http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Other commands:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Command            | What it does                                  |
+| ------------------ | --------------------------------------------- |
+| `npm test`         | Runs the solver tests                         |
+| `npm run validate` | Checks `data/courses.json` for anything wrong |
+| `npm run build`    | Production build (what Vercel runs)           |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## How it works
 
-## Learn More
+- `data/courses.json` holds every course, section, day, time, room and faculty.
+  It is made from the university routine PDF and is the only data source.
+- `lib/solver.ts` finds the plans (constraint satisfaction: pre-filter by days and
+  times, backtracking with most-constrained-first and forward checking, ranked by
+  least gap between classes; "If required" sections only after normal ones).
+- `lib/explain.ts` explains why no routine fits and suggests what to change.
+- `lib/pdf.ts` makes the PDF in the browser.
+- `components/` holds the page.
 
-To learn more about Next.js, take a look at the following resources:
+## Updating the data for a new trimester
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Put the new routine PDF somewhere on your computer.
+2. Install the PDF reader once: `pip install pdfplumber`
+3. Run:
+   ```bash
+   python scripts/parse_routine.py "path/to/New Routine.pdf"
+   npm run validate
+   npm test
+   ```
+   The script stops and lists any row it can't read, so nothing is guessed.
+   If the new PDF has a different layout, the script may need small changes.
+4. Commit and push. Vercel updates the live site automatically.
